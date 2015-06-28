@@ -17,7 +17,7 @@ import sklearn.grid_search
 
 
 # SCOTUS imports
-from scotus.utility import get_data_by_condition, get_data_before_date, get_means
+from utility import get_data_by_condition, get_data_before_date, get_means
 
 # Roll windows
 ROLL_WINDOWS = [None, 10]
@@ -78,7 +78,7 @@ def train_model(feature_data, target_data, search_parameters):
 
     # Create the stratified cross-validation folder; this means that the distribution of the target
     # within each fold will mirror the overall population up to this point.
-    cv = sklearn.cross_validation.StratifiedKFold(target_data, n_folds=10)
+    cv = sklearn.cross_validation.StratifiedKFold(target_data, n_folds=2)
 
     # Create grid searcher
     grid_search = sklearn.grid_search.GridSearchCV(model_pipeline,
@@ -90,7 +90,7 @@ def train_model(feature_data, target_data, search_parameters):
                                                                                        .value_counts().idxmax()),
                                                    cv=cv,
                                                    verbose=0,
-                                                   n_jobs=2)
+                                                   n_jobs=1)
 
     # Fit model in grid search
     grid_search.fit(feature_data, target_data)

@@ -11,7 +11,7 @@ import numpy
 import pandas
 
 # SCOTUS imports
-from scotus.constants import party_map_data, court_circuit_map, justice_name_map
+from constants import party_map_data, court_circuit_map, justice_name_map
 
 # Now load justice feature data
 justice_metadata = pandas.DataFrame.from_csv('data/justice_list.csv')

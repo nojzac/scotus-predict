@@ -4,7 +4,7 @@
 
 Predict justice votes at the Supreme Court from 1953 to 2013.
 '''
-
+print 'starting'
 # Imports
 import copy
 import numpy
@@ -12,17 +12,22 @@ import os
 import pandas
 import sklearn.metrics
 import time
+import cPickle as pickle
 
 # SCOTUS imports
-from scotus.utility import get_date, get_gender, get_month, \
+from utility import get_date, get_gender, get_month, \
     get_party_president, get_segal_cover, get_year_from_docket, get_year_of_birth, \
     map_circuit, map_party
-from scotus.model import get_ml_row, train_model, search_parameters
+from model import get_ml_row, train_model, search_parameters
 
 # Load SCDB CSV data
 scdb_case_data = pandas.DataFrame.from_csv('data/SCDB_2013_01_caseCentered_Citation.csv')
 scdb_justice_data = pandas.DataFrame.from_csv('data/SCDB_2013_01_justiceCentered_Citation.csv')
 
+scdb_case_data = scdb_case_data[scdb_case_data['term'] >= 2000]
+scdb_justice_data = scdb_justice_data[scdb_justice_data['term'] >= 2000]
+
+print 'processing'
 '''
 Apply date transforms to the data.
 '''
@@ -86,13 +91,14 @@ scdb_case_data.loc[scdb_case_data['decisionDirection'] == 3, 'decisionDirection'
 scdb_justice_data.loc[scdb_justice_data['decisionDirection'] == 3, 'decisionDirection'] = 1.5
 
 # Set minimum record count prior to training and max records to predict.
-min_record_count = 100
+min_record_count = 900
 max_record_count = 99999
 
 # Setup total feature and target data
 feature_data = pandas.DataFrame()
 target_data = pandas.DataFrame()
 
+print 'model setup'
 # Setup the model
 model = None
 bad_feature_labels = ['docket',
@@ -118,9 +124,11 @@ case_outcome_data = pandas.DataFrame()
 # Track the less likely label
 min_label = 1.0
 
+print 'start docket iterations'
 # Iterate over all dockets
 num_dockets = 0
 for docket_id in docket_list:
+    if num_dockets % 25 == 0: print num_dockets
     # Increment dockets seen
     num_dockets += 1
 
@@ -239,6 +247,7 @@ feature_weight_df = pandas.DataFrame(feature_weights,
 case_assessment = []
 
 # Try to calculate case outcomes accurately.
+print 'calculating outcomes'
 for case_id, case_data in outcome_data.groupby('docket'):
     # Get the vote data
     vote_data = (case_data[['docket', 'justice', 'is_chief', 'justice_direction_mean', 'prediction', 'target']].sort(
@@ -331,7 +340,22 @@ outcome_data.to_csv(os.path.join(run_output_folder, 'justice_outcome_data.csv'))
 case_assessment_df.to_csv(os.path.join(run_output_folder, 'case_outcome_data.csv'))
 feature_weight_df.to_csv(os.path.join(run_output_folder, 'feature_weights.csv'))
 
-# Make a ZIP
-os.system('zip -9 {0}.zip {1}'.format(os.path.join(output_folder, timestamp_suffix),
-                                      os.path.join(run_output_folder, '*.csv')))
+# # Make a ZIP
+# os.system('zip -9 {0}.zip {1}'.format(os.path.join(output_folder, timestamp_suffix),
+#                                       os.path.join(run_output_folder, '*.csv')))
 
+# Add partyWinning from SCDB to case_assessment
+#add_these_columns = scdb_case_data[['docket', 'docketId', 'partyWinning']]
+
+print case_assessment_df.columns
+print scdb_case_data.columns
+# print 'docket' in case_assessment_df.columns
+# print 'docketId' in 
+case_assessment_df2 = pandas.merge(case_assessment_df, scdb_case_data[['docket','docketId','partyWinning']],
+      how='inner', left_on='docket', right_on='docketId', copy=True)
+
+
+# Pickle case_assessment_df file
+filename = 'data/case_assessment.pkl'
+with open(filename,'wb') as fp:
+    pickle.dump(case_assessment_df2,fp)
