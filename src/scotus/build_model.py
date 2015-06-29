@@ -21,11 +21,11 @@ from utility import get_date, get_gender, get_month, \
 from model import get_ml_row, train_model, search_parameters
 
 # Load SCDB CSV data
-scdb_case_data = pandas.DataFrame.from_csv('data/SCDB_2013_01_caseCentered_Citation.csv')
-scdb_justice_data = pandas.DataFrame.from_csv('data/SCDB_2013_01_justiceCentered_Citation.csv')
+scdb_case_data = pandas.DataFrame.from_csv('data/SCDB_2014_01_caseCentered_Citation.csv')
+scdb_justice_data = pandas.DataFrame.from_csv('data/SCDB_2014_01_justiceCentered_Citation.csv')
 
-scdb_case_data = scdb_case_data[scdb_case_data['term'] >= 2000]
-scdb_justice_data = scdb_justice_data[scdb_justice_data['term'] >= 2000]
+scdb_case_data = scdb_case_data[scdb_case_data['term'] >= 2013]
+scdb_justice_data = scdb_justice_data[scdb_justice_data['term'] >= 2013]
 
 print 'processing'
 '''
@@ -91,7 +91,7 @@ scdb_case_data.loc[scdb_case_data['decisionDirection'] == 3, 'decisionDirection'
 scdb_justice_data.loc[scdb_justice_data['decisionDirection'] == 3, 'decisionDirection'] = 1.5
 
 # Set minimum record count prior to training and max records to predict.
-min_record_count = 900
+min_record_count = 10
 max_record_count = 99999
 
 # Setup total feature and target data
@@ -177,7 +177,7 @@ for docket_id in docket_list:
     if model != None:
         # If so, let's test it.
         docket_outcome_data = feature_rows.copy()
-        docket_outcome_data['prediction'] = model.predict(feature_rows[feature_labels])
+        docket_outcome_data['prediction'] = model.predict_proba(feature_rows[feature_labels])[:,0]
         docket_outcome_data['target'] = target_rows.copy()
 
         # Get the vote of the court aggregated
@@ -200,13 +200,13 @@ for docket_id in docket_list:
         # Aggregate all data
         outcome_data = outcome_data.append(copy.deepcopy(docket_outcome_data))
 
-        if num_dockets % 100 == 0:
-            # Output the rolling confusion matrix every few ticks
-            print(sklearn.metrics.classification_report(outcome_data['target'].tolist(),
-                                                        outcome_data['prediction'].tolist()))
+        # if num_dockets % 100 == 0:
+        #     # Output the rolling confusion matrix every few ticks
+        #     print(sklearn.metrics.classification_report(outcome_data['target'].tolist(),
+        #                                                 outcome_data['prediction'].tolist()))
 
-            print(sklearn.metrics.accuracy_score(outcome_data['target'].tolist(),
-                                                 outcome_data['prediction'].tolist()))
+        #     print(sklearn.metrics.accuracy_score(outcome_data['target'].tolist(),
+        #                                          outcome_data['prediction'].tolist()))
 
     # Relabel indices for feature and target data
     record_count = int(feature_data.shape[0])
@@ -305,27 +305,27 @@ case_assessment_df['year'] = case_assessment_df['docket'].apply(get_year_from_do
 
 x_case_assessment_df = case_assessment_df.ix[case_assessment_df['year'] >= 1946]
 
-print("Case Assessment")
-print(pandas.DataFrame(sklearn.metrics.confusion_matrix(x_case_assessment_df['overturn_actual'].tolist(),
-                                                        x_case_assessment_df['overturn_predict'].tolist())))
+# print("Case Assessment")
+# print(pandas.DataFrame(sklearn.metrics.confusion_matrix(x_case_assessment_df['overturn_actual'].tolist(),
+#                                                         x_case_assessment_df['overturn_predict'].tolist())))
 
-print(sklearn.metrics.classification_report(x_case_assessment_df['overturn_actual'].tolist(),
-                                            x_case_assessment_df['overturn_predict'].tolist()))
+# print(sklearn.metrics.classification_report(x_case_assessment_df['overturn_actual'].tolist(),
+#                                             x_case_assessment_df['overturn_predict'].tolist()))
 
-print(sklearn.metrics.accuracy_score(x_case_assessment_df['overturn_actual'].tolist(),
-                                     x_case_assessment_df['overturn_predict'].tolist()))
+# print(sklearn.metrics.accuracy_score(x_case_assessment_df['overturn_actual'].tolist(),
+#                                      x_case_assessment_df['overturn_predict'].tolist()))
 
-print("Justice Assessment")
+# print("Justice Assessment")
 x_outcome_data = outcome_data.loc[outcome_data['year'] >= 1946]
 
-print(pandas.DataFrame(sklearn.metrics.confusion_matrix(x_outcome_data['target'].tolist(),
-                                                        x_outcome_data['prediction'].tolist())))
+# print(pandas.DataFrame(sklearn.metrics.confusion_matrix(x_outcome_data['target'].tolist(),
+#                                                         x_outcome_data['prediction'].tolist())))
 
-print(sklearn.metrics.classification_report(x_outcome_data['target'].tolist(),
-                                            x_outcome_data['prediction'].tolist()))
+# print(sklearn.metrics.classification_report(x_outcome_data['target'].tolist(),
+#                                             x_outcome_data['prediction'].tolist()))
 
-print(sklearn.metrics.accuracy_score(x_outcome_data['target'].tolist(),
-                                     x_outcome_data['prediction'].tolist()))
+# print(sklearn.metrics.accuracy_score(x_outcome_data['target'].tolist(),
+#                                      x_outcome_data['prediction'].tolist()))
 
 # Setup vars
 output_folder = 'model_output'
@@ -347,8 +347,6 @@ feature_weight_df.to_csv(os.path.join(run_output_folder, 'feature_weights.csv'))
 # Add partyWinning from SCDB to case_assessment
 #add_these_columns = scdb_case_data[['docket', 'docketId', 'partyWinning']]
 
-print case_assessment_df.columns
-print scdb_case_data.columns
 # print 'docket' in case_assessment_df.columns
 # print 'docketId' in 
 case_assessment_df2 = pandas.merge(case_assessment_df, scdb_case_data[['docket','docketId','partyWinning']],
@@ -356,6 +354,6 @@ case_assessment_df2 = pandas.merge(case_assessment_df, scdb_case_data[['docket',
 
 
 # Pickle case_assessment_df file
-filename = 'data/case_assessment.pkl'
+filename = 'data/case_assessment_proba_test.pkl'
 with open(filename,'wb') as fp:
     pickle.dump(case_assessment_df2,fp)

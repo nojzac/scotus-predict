@@ -90,7 +90,7 @@ def train_model(feature_data, target_data, search_parameters):
                                                                                        .value_counts().idxmax()),
                                                    cv=cv,
                                                    verbose=0,
-                                                   n_jobs=1)
+                                                   n_jobs=-1)
 
     # Fit model in grid search
     grid_search.fit(feature_data, target_data)
