@@ -13,6 +13,7 @@ import pandas
 import sklearn.metrics
 import time
 import cPickle as pickle
+from poisson_binomial import poisson_binomial_cdf
 
 # SCOTUS imports
 from utility import get_date, get_gender, get_month, \
@@ -24,8 +25,8 @@ from model import get_ml_row, train_model, search_parameters
 scdb_case_data = pandas.DataFrame.from_csv('data/SCDB_2014_01_caseCentered_Citation.csv')
 scdb_justice_data = pandas.DataFrame.from_csv('data/SCDB_2014_01_justiceCentered_Citation.csv')
 
-scdb_case_data = scdb_case_data[scdb_case_data['term'] >= 2013]
-scdb_justice_data = scdb_justice_data[scdb_justice_data['term'] >= 2013]
+scdb_case_data = scdb_case_data[scdb_case_data['term'] >= 2010]
+scdb_justice_data = scdb_justice_data[scdb_justice_data['term'] >= 2010]
 
 print 'processing'
 '''
@@ -91,7 +92,7 @@ scdb_case_data.loc[scdb_case_data['decisionDirection'] == 3, 'decisionDirection'
 scdb_justice_data.loc[scdb_justice_data['decisionDirection'] == 3, 'decisionDirection'] = 1.5
 
 # Set minimum record count prior to training and max records to predict.
-min_record_count = 10
+min_record_count = 50
 max_record_count = 99999
 
 # Setup total feature and target data
@@ -252,7 +253,7 @@ for case_id, case_data in outcome_data.groupby('docket'):
     # Get the vote data
     vote_data = (case_data[['docket', 'justice', 'is_chief', 'justice_direction_mean', 'prediction', 'target']].sort(
         'justice_direction_mean'))
-    overturn_predicted = vote_data['prediction'].mean()
+    overturn_predicted = 1 - poisson_binomial_cdf(vote_data['prediction'], 4)
     overturn_actual = vote_data['target'].mean()
     row = [case_id,
            get_year_from_docket(case_id),
