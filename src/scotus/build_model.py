@@ -201,13 +201,13 @@ for docket_id in docket_list:
         # Aggregate all data
         outcome_data = outcome_data.append(copy.deepcopy(docket_outcome_data))
 
-        # if num_dockets % 100 == 0:
-        #     # Output the rolling confusion matrix every few ticks
-        #     print(sklearn.metrics.classification_report(outcome_data['target'].tolist(),
-        #                                                 outcome_data['prediction'].tolist()))
+        if num_dockets % 100 == 0:
+            # Output the rolling confusion matrix every few ticks
+            print(sklearn.metrics.classification_report(outcome_data['target'].tolist(),
+                                                        outcome_data['prediction'].tolist()))
 
-        #     print(sklearn.metrics.accuracy_score(outcome_data['target'].tolist(),
-        #                                          outcome_data['prediction'].tolist()))
+            print(sklearn.metrics.accuracy_score(outcome_data['target'].tolist(),
+                                                 outcome_data['prediction'].tolist()))
 
     # Relabel indices for feature and target data
     record_count = int(feature_data.shape[0])
@@ -306,27 +306,27 @@ case_assessment_df['year'] = case_assessment_df['docket'].apply(get_year_from_do
 
 x_case_assessment_df = case_assessment_df.ix[case_assessment_df['year'] >= 1946]
 
-# print("Case Assessment")
-# print(pandas.DataFrame(sklearn.metrics.confusion_matrix(x_case_assessment_df['overturn_actual'].tolist(),
-#                                                         x_case_assessment_df['overturn_predict'].tolist())))
+print("Case Assessment")
+print(pandas.DataFrame(sklearn.metrics.confusion_matrix(x_case_assessment_df['overturn_actual'].tolist(),
+                                                        x_case_assessment_df['overturn_predict'].tolist())))
 
-# print(sklearn.metrics.classification_report(x_case_assessment_df['overturn_actual'].tolist(),
-#                                             x_case_assessment_df['overturn_predict'].tolist()))
+print(sklearn.metrics.classification_report(x_case_assessment_df['overturn_actual'].tolist(),
+                                            x_case_assessment_df['overturn_predict'].tolist()))
 
-# print(sklearn.metrics.accuracy_score(x_case_assessment_df['overturn_actual'].tolist(),
-#                                      x_case_assessment_df['overturn_predict'].tolist()))
+print(sklearn.metrics.accuracy_score(x_case_assessment_df['overturn_actual'].tolist(),
+                                     x_case_assessment_df['overturn_predict'].tolist()))
 
-# print("Justice Assessment")
+print("Justice Assessment")
 x_outcome_data = outcome_data.loc[outcome_data['year'] >= 1946]
 
-# print(pandas.DataFrame(sklearn.metrics.confusion_matrix(x_outcome_data['target'].tolist(),
-#                                                         x_outcome_data['prediction'].tolist())))
+print(pandas.DataFrame(sklearn.metrics.confusion_matrix(x_outcome_data['target'].tolist(),
+                                                        x_outcome_data['prediction'].tolist())))
 
-# print(sklearn.metrics.classification_report(x_outcome_data['target'].tolist(),
-#                                             x_outcome_data['prediction'].tolist()))
+print(sklearn.metrics.classification_report(x_outcome_data['target'].tolist(),
+                                            x_outcome_data['prediction'].tolist()))
 
-# print(sklearn.metrics.accuracy_score(x_outcome_data['target'].tolist(),
-#                                      x_outcome_data['prediction'].tolist()))
+print(sklearn.metrics.accuracy_score(x_outcome_data['target'].tolist(),
+                                     x_outcome_data['prediction'].tolist()))
 
 # Setup vars
 output_folder = 'model_output'
