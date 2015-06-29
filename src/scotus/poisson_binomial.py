@@ -1,28 +1,20 @@
 import numpy as np
 
-def poisson_binomial_pmf(probs, k=5):
-   def T(i):
-       cumulative_sum = 0.
-       for j in range(1, len(probs)+1):
-           cumulative_sum += ((probs[j]) / (1 - probs[j]))**i
-       return cumulative_sum
+def poisson_binomial_pmf(probs, k):
+    def C():
+        return np.exp(2.j*np.pi/(len(probs)+1))
+    p = 0.
+    for l in range(0, len(probs)+1):
+        p += (C()**(-l*k))*((1+(C()**l-1)*probs).prod())
+    p /= (len(probs)+1)
+    return np.real(p)
 
-   p_k = (1-probs).prod # k = 0
-   p_ks = [p_k]
+def poisson_binomial_cdf(probs, k):
+    cumulative_sum = 0.0
+    for i in range(0, k+1):
+        cumulative_sum += poisson_binomial_pmf(probs, i)
+    return cumulative_sum
 
-   if k == 0:
-       return p_k
-   else:
-       cumulative_sum = 0.
-       for i in range(1, k+1):
-           term = ((-1.)**(i-1))
-           term *= p_ks[k-i]
-           term *= T(i)
-           cumulative_sum += term
-       cumulative_sum /= k
-
-def poisson_binomial_cdf(probs, k=5)
-   cumulative_sum = 0.0
-   for i in range(0, k+1):
-       cumulative_sum += poisson_binomial_pmf(probs, i)
-   return cumulative_sum
+if __name__ == '__main__':
+    probs = np.array([.5, .5, .5])
+    print poisson_binomial_cdf(probs, 3)
